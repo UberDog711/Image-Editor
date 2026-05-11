@@ -73,16 +73,36 @@ class Main {
     ///////////////////////////////////////////////////////////////////
 
     class MyMouseListener implements MouseListener, MouseMotionListener {
+        private int lastPressedX;
+        private int lastPressedY;
+        private Tool currentTool = Tool.SCRIBBLE;
 
+        enum Tool {
+            SCRIBBLE,
+            POINT,
+            STRAIGHTLINE
+        }
+
+
+        public void setTool(Tool tool) {
+            currentTool = tool;
+        }
         @Override
         public void mousePressed(MouseEvent e) {
             int x = e.getX();
             int y = e.getY();
             Graphics pen = myImage.getGraphics();
             pen.setColor(Color.RED);
-            int brushSize = 30;
-            pen.fillOval(x-brushSize/2, y-brushSize/2, brushSize, brushSize);
+            int brushSize = 10;
+            if (currentTool == Tool.POINT) {
+                pen.fillOval(x-brushSize/2, y-brushSize/2, brushSize, brushSize);
+            } if (currentTool == Tool.STRAIGHTLINE) {
+                pen.drawLine(x,y,lastPressedX,lastPressedY);
+            }
+
             myGraphicsPanel.repaint();
+            lastPressedX = x;
+            lastPressedY = y;
         }
 
         @Override
@@ -91,6 +111,16 @@ class Main {
 
         @Override
         public void mouseDragged(MouseEvent e) {
+            int x = e.getX();
+            int y = e.getY();
+            Graphics pen = myImage.getGraphics();
+            pen.setColor(Color.RED);
+            if (currentTool == Tool.SCRIBBLE) {
+                pen.drawLine(x,y,lastPressedX,lastPressedY);
+            }
+            myGraphicsPanel.repaint();
+            lastPressedX = x;
+            lastPressedY = y;
         }
 
         @Override
