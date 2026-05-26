@@ -16,6 +16,8 @@ class Main {
     BufferedImage myImage;
     LoadButton loadButton;
     SaveButton saveButton;
+    private int solvedHeight;
+    private int solvedWidth;
 
     public void main() {
         myImage = new BufferedImage(800, 600, BufferedImage.TYPE_INT_RGB);
@@ -61,11 +63,29 @@ class Main {
             MyMouseListener mouseListener = new MyMouseListener();
             this.addMouseListener(mouseListener);
             this.addMouseMotionListener(mouseListener);
+
         }
 
         @Override
         public void paintComponent(Graphics pen) {
-            pen.drawImage(myImage, 0, 0, getWidth(), getHeight(), null);
+            int panelHeight = getHeight();
+            int panelWidth = getWidth();
+            double panelRatio = (double) panelWidth / panelHeight;
+
+            int imageHeight = myImage.getHeight();
+            int imageWidth = myImage.getWidth();
+            double imageRatio = (double) imageWidth / imageHeight;
+
+            solvedHeight = panelHeight;
+            solvedWidth = panelWidth;
+
+            if (panelRatio > imageRatio) {
+                    solvedWidth =  (int)(imageRatio * solvedHeight);
+            } else if (panelRatio < imageRatio) {
+                    solvedHeight = (int)(solvedWidth / imageRatio);
+            }
+
+            pen.drawImage(myImage, 0, 0, solvedWidth, solvedHeight, null);
         }
 
     }
@@ -75,7 +95,7 @@ class Main {
     class MyMouseListener implements MouseListener, MouseMotionListener {
         private int lastPressedX;
         private int lastPressedY;
-        private Tool currentTool = Tool.SCRIBBLE;
+        private Tool currentTool = Tool.POINT``;
 
         enum Tool {
             SCRIBBLE,
@@ -89,13 +109,18 @@ class Main {
         }
         @Override
         public void mousePressed(MouseEvent e) {
-            int x = e.getX();
-            int y = e.getY();
+            double transform = (double) myImage.getWidth() / solvedWidth;
+            int x = (int) (e.getX() * transform);
+            int y = (int) (e.getY() * transform);
+
+
+
+
             Graphics pen = myImage.getGraphics();
             pen.setColor(Color.RED);
             int brushSize = 10;
             if (currentTool == Tool.POINT) {
-                pen.fillOval(x-brushSize/2, y-brushSize/2, brushSize, brushSize);
+                pen.fillOval((x-brushSize/2), (y-brushSize/2), brushSize, brushSize);
             } if (currentTool == Tool.STRAIGHTLINE) {
                 pen.drawLine(x,y,lastPressedX,lastPressedY);
             }
@@ -111,8 +136,11 @@ class Main {
 
         @Override
         public void mouseDragged(MouseEvent e) {
-            int x = e.getX();
-            int y = e.getY();
+            double transform = (double) myImage.getWidth() / solvedWidth;
+            int x = (int) (e.getX() * transform);
+            int y = (int) (e.getY() * transform);
+
+
             Graphics pen = myImage.getGraphics();
             pen.setColor(Color.RED);
             if (currentTool == Tool.SCRIBBLE) {
@@ -174,7 +202,15 @@ class Main {
         }
 
         public void actionPerformed(ActionEvent e) {
-            ;
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.showSaveDialog(myGraphicsPanel);
+            if (JFileChooser.APPROVE_OPTION ==0) {
+                try {
+                    ImageIO.write(myImage,"png",fileChooser.getSelectedFile());
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
         }
     }
 
